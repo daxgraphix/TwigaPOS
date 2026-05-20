@@ -221,28 +221,19 @@ class _OperationsPageState extends State<OperationsPage> {
                     'End of Day',
                     Icons.assessment,
                     AppTheme.primaryColor,
-                    () {
-                      final router = GoRouter.of(context);
-                      router.push('/shift-report');
-                    },
+                    () => context.push('/shift-report'),
                   ),
                   _buildQuickActionCard(
                     'View Reports',
                     Icons.bar_chart,
                     AppTheme.primaryColor,
-                    () {
-                      final router = GoRouter.of(context);
-                      router.go('/reports');
-                    },
+                    () => context.go('/reports'),
                   ),
                   _buildQuickActionCard(
                     'Planner',
                     Icons.event_note,
                     AppTheme.primaryColor,
-                    () {
-                      final router = GoRouter.of(context);
-                      router.push('/planner');
-                    },
+                    () => context.push('/planner'),
                   ),
                 ],
               ),

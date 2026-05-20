@@ -138,7 +138,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                 physics: const NeverScrollableScrollPhysics(),
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
-                childAspectRatio: isDesktop ? 2.5 : 1.7,
+                childAspectRatio: isDesktop ? 2.5 : 1.4,
                 children: [
                   _buildSummaryCard(
                     'Total Customers',
@@ -253,25 +253,26 @@ class _CustomerListPageState extends State<CustomerListPage> {
       elevation: Responsive.getCardElevation(context),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: EdgeInsets.all(isSmallPhone ? 10 : 12),
+        padding: EdgeInsets.all(isSmallPhone ? 8 : 12),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: EdgeInsets.all(isSmallPhone ? 5 : 6),
+              padding: EdgeInsets.all(isSmallPhone ? 4 : 6),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(icon, color: color, size: isSmallPhone ? 18 : 20),
+              child: Icon(icon, color: color, size: isSmallPhone ? 16 : 20),
             ),
-            SizedBox(height: isSmallPhone ? 4 : 6),
+            SizedBox(height: isSmallPhone ? 3 : 6),
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
                 value,
                 style: TextStyle(
-                  fontSize: isSmallPhone ? 18 : 20,
+                  fontSize: isSmallPhone ? 16 : 20,
                   fontWeight: FontWeight.bold,
                 ),
                 maxLines: 1,
@@ -280,7 +281,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
             Text(
               title,
               style: TextStyle(
-                fontSize: isSmallPhone ? 10 : 11,
+                fontSize: isSmallPhone ? 9 : 11,
                 color: Colors.grey[600],
               ),
               textAlign: TextAlign.center,

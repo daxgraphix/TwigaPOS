@@ -160,6 +160,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     final currency = Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS');
     final symbol = AppTheme.getCurrencySymbol(currency);
+    final isSmallPhone = MediaQuery.of(context).size.width < 380;
 
     if (_isLoading) {
       return const Scaffold(
@@ -267,7 +268,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 physics: const NeverScrollableScrollPhysics(),
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
-                childAspectRatio: 1.6,
+                childAspectRatio: isSmallPhone ? 1.3 : 1.6,
                 children: [
                   _buildKPICard('Today\'s Revenue', '$symbol${todayRevenue.toStringAsFixed(0)}', Icons.attach_money, Colors.green),
                   _buildKPICard('Today\'s Profit', '$symbol${todayProfit.toStringAsFixed(0)}', Icons.trending_up, Colors.blue),
@@ -291,12 +292,14 @@ class _DashboardPageState extends State<DashboardPage> {
                 physics: const NeverScrollableScrollPhysics(),
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
-                childAspectRatio: 1.3,
+                childAspectRatio: isSmallPhone ? 1.2 : 1.3,
                 children: [
                   _buildQuickActionCard('New Sale', 'Process transactions', Icons.add_shopping_cart, Colors.red, () => context.push('/new-sale')),
+                  _buildQuickActionCard('Operations', 'Daily tasks & cash drop', Icons.business_center, Colors.brown, () => context.push('/operations')),
                   _buildQuickActionCard('View Reports', 'Sales analytics', Icons.bar_chart, Colors.green, () => context.go('/reports')),
                   _buildQuickActionCard('Manage Products', 'Inventory control', Icons.inventory, Colors.orange, () => context.push('/products')),
                   _buildQuickActionCard('Customers', 'Client management', Icons.people, Colors.purple, () => context.push('/customers')),
+                  _buildQuickActionCard('Planner & Notes', 'Calendar & tasks', Icons.event_note, Colors.teal, () => context.push('/planner')),
                 ],
               ),
 
@@ -312,17 +315,22 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildKPICard(String title, String value, IconData icon, Color color) {
+    final isSmall = MediaQuery.of(context).size.width < 380;
     return Card(
       elevation: Responsive.getCardElevation(context),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(isSmall ? 8 : 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 28),
-            const Spacer(),
-            Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            Text(title, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+            Icon(icon, color: color, size: isSmall ? 18 : 24),
+            SizedBox(height: isSmall ? 4 : 8),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(value, style: TextStyle(fontSize: isSmall ? 14 : 18, fontWeight: FontWeight.bold)),
+            ),
+            Text(title, style: TextStyle(fontSize: isSmall ? 9 : 11, color: Colors.grey[600])),
           ],
         ),
       ),
@@ -330,6 +338,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildQuickActionCard(String title, String subtitle, IconData icon, Color color, VoidCallback onTap) {
+    final isSmall = MediaQuery.of(context).size.width < 380;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -337,7 +346,7 @@ class _DashboardPageState extends State<DashboardPage> {
         elevation: 3,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Container(
-          padding: const EdgeInsets.all(14),
+          padding: EdgeInsets.all(isSmall ? 10 : 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             gradient: LinearGradient(
@@ -349,10 +358,10 @@ class _DashboardPageState extends State<DashboardPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: color, size: 26),
+              Icon(icon, color: color, size: isSmall ? 22 : 26),
               const Spacer(),
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-              Text(subtitle, style: TextStyle(fontSize: 11, color: Colors.grey[600]), maxLines: 1, overflow: TextOverflow.ellipsis),
+              Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: isSmall ? 12 : 13)),
+              Text(subtitle, style: TextStyle(fontSize: isSmall ? 10 : 11, color: Colors.grey[600]), maxLines: 1, overflow: TextOverflow.ellipsis),
             ],
           ),
         ),

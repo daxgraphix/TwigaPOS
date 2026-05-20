@@ -1,0 +1,76 @@
+  @override
+  Widget build(BuildContext context) {
+    final currency = Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS');
+    final symbol = AppTheme.getCurrencySymbol(currency);
+
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(_shopName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              const Text('Dashboard', style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal)),
+            ],
+          ),
+          backgroundColor: AppTheme.primaryColor,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _isLoading ? null : () => _loadDashboardData(forceRefresh: true),
+              tooltip: 'Refresh data',
+            ),
+            IconButton(
+              icon: const Icon(Icons.calendar_today),
+              onPressed: () => context.push('/planner'),
+              tooltip: 'Planner & Calendar',
+            ),
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'logout') {
+                  _showLogoutDialog();
+                } else if (value == 'planner') {
+                  context.push('/planner');
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'planner',
+                  child: Row(
+                    children: [
+                      Icon(Icons.event_note, color: Colors.blue),
+                      SizedBox(width: 8),
+                      Text('Planner & Notes'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'logout',
+                  child: Row(
+                    children: [
+                      Icon(Icons.logout, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Logout'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        body: _buildDashboardBody(symbol),
+      ),
+    );
+  }
+
+  Widget _buildDashboardBody(String symbol) {
+    if (_hasError) return _buildErrorView();
+
+    return RefreshIndicator(
+      onRefresh: () => _loadDashboardData(forceRefresh: true),
+      child:_isLoading ? _buildLoadingView() : _buildContentView(symbol),
+    );
+  }

@@ -27,6 +27,7 @@ class _DashboardPageState extends State<DashboardPage> {
   late DateTime _today;
   Map<String, dynamic> _dashboardData = {};
   bool _isLoading = true;
+  bool _hasError = false;
   DateTime? _lastLoadTime;
 
   static const _cacheDuration = Duration(minutes: 5);
@@ -37,13 +38,11 @@ class _DashboardPageState extends State<DashboardPage> {
     _today = DateTime.now();
     _loadDashboardData();
 
-    // Read shop name from ShopBloc state
     final shopState = context.read<ShopBloc>().state;
     if (shopState is ShopLoaded && shopState.shop.name.isNotEmpty) {
       _shopName = shopState.shop.name;
     }
 
-    // Listen for profile customization changes (name/email) so "Welcome back" updates live
     Hive.box('settings').listenable().addListener(() {
       if (mounted) setState(() {});
     });
@@ -75,7 +74,7 @@ class _DashboardPageState extends State<DashboardPage> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-               context.read<AuthBloc>().add(const AuthLogoutRequested());
+              context.read<AuthBloc>().add(const AuthLogoutRequested());
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: Text(AppLocalizations.of(context)!.logout),
@@ -88,7 +87,6 @@ class _DashboardPageState extends State<DashboardPage> {
   Future<void> _loadDashboardData({bool forceRefresh = false}) async {
     if (!mounted) return;
 
-    // Check if we have cached data and it's still valid
     if (!forceRefresh &&
         _dashboardData.isNotEmpty &&
         _lastLoadTime != null &&
@@ -98,10 +96,10 @@ class _DashboardPageState extends State<DashboardPage> {
 
     setState(() {
       _isLoading = true;
+      _hasError = false;
     });
 
     try {
-      // Load today's sales data concurrently for better performance
       final salesRepo = context.read<SalesRepository>();
       final customerRepo = context.read<CustomerRepository>();
       final stockRepo = context.read<StockRepository>();
@@ -109,7 +107,6 @@ class _DashboardPageState extends State<DashboardPage> {
       final startOfDay = DateTime(_today.year, _today.month, _today.day);
       final endOfDay = startOfDay.add(const Duration(days: 1));
 
-      // Run all data loading operations concurrently
       final results = await Future.wait([
         salesRepo.getSalesByDateRange(startOfDay, endOfDay),
         stockRepo.getLowStockAlerts(),
@@ -124,7 +121,6 @@ class _DashboardPageState extends State<DashboardPage> {
       final lowStockAlerts = lowStockResult.getOrElse((_) => []);
       final debtAging = debtAgingResult.getOrElse((_) => {});
 
-      // Calculate today's metrics
       double todayRevenue = todaySales.fold<double>(0.0, (double sum, SalesTransaction sale) => sum + sale.totalRevenue);
       double todayProfit = todaySales.fold<double>(0.0, (double sum, SalesTransaction sale) => sum + sale.totalProfit);
       int todayTransactions = todaySales.length;
@@ -148,6 +144,7 @@ class _DashboardPageState extends State<DashboardPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
+        _hasError = true;
         _isLoading = false;
       });
     }
@@ -157,6 +154,33 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     final currency = Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS');
     final symbol = AppTheme.getCurrencySymbol(currency);
+    final isSmallPhone = MediaQuery.of(context).size.width < 380;
+
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_hasError) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              const Text('Failed to load dashboard'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => _loadDashboardData(forceRefresh: true),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     final data = _dashboardData;
     final todayRevenue = (data['todayRevenue'] ?? 0.0) as double;
@@ -188,126 +212,82 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          if (_isLoading)
-            const LinearProgressIndicator(
-              minHeight: 2,
-              backgroundColor: Colors.transparent,
-            ),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () => _loadDashboardData(forceRefresh: true),
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(Responsive.getPadding(context)),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      body: RefreshIndicator(
+        onRefresh: () => _loadDashboardData(forceRefresh: true),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(Responsive.getPadding(context)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
                   children: [
-                    // Welcome Header
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryColor,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
+                    const Icon(Icons.waving_hand, color: Colors.white, size: 28),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.waving_hand, color: Colors.white, size: 28),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Welcome back,',
-                                  style: TextStyle(color: Colors.white70, fontSize: 14),
-                                ),
-                                Text(
-                                  _getUserDisplayName(),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          const Text('Welcome back,', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                          Text(_getUserDisplayName(), style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
-
-                    const SizedBox(height: 24),
-
-              // KPI Cards - using simple Column + Row for reliability (no Wrap/Grid overflow issues)
-              Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(child: _buildKPICard('Today\'s Revenue', '$symbol${todayRevenue.toStringAsFixed(0)}', Icons.attach_money, Colors.green)),
-                      const SizedBox(width: 12),
-                      Expanded(child: _buildKPICard('Today\'s Profit', '$symbol${todayProfit.toStringAsFixed(0)}', Icons.trending_up, Colors.blue)),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(child: _buildKPICard('Transactions', '$todayTransactions', Icons.receipt, Colors.orange)),
-                      const SizedBox(width: 12),
-                      Expanded(child: _buildKPICard('Outstanding Debt', '$symbol${totalOutstandingDebt.toStringAsFixed(0)}', Icons.account_balance, Colors.red)),
-                    ],
-                  ),
-                ],
-              ),
-
-                    const SizedBox(height: 24),
-
-                    // Quick Actions
-                    Text(
-                      'Quick Actions',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 12),
-
-              // Quick Actions - using simple Column + Row for reliability (no Wrap overflow)
-              Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(child: _buildQuickActionCard('New Sale', 'Process transactions', Icons.add_shopping_cart, Colors.red, () => context.push('/new-sale'))),
-                      const SizedBox(width: 12),
-                      Expanded(child: _buildQuickActionCard('Operations', 'Daily tasks & cash drop', Icons.business_center, Colors.brown, () => context.push('/operations'))),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(child: _buildQuickActionCard('View Reports', 'Sales analytics', Icons.bar_chart, Colors.green, () => context.go('/reports'))),
-                      const SizedBox(width: 12),
-                      Expanded(child: _buildQuickActionCard('Manage Products', 'Inventory control', Icons.inventory, Colors.orange, () => context.push('/products'))),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(child: _buildQuickActionCard('Customers', 'Client management', Icons.people, Colors.purple, () => context.push('/customers'))),
-                      const SizedBox(width: 12),
-                      Expanded(child: _buildQuickActionCard('Planner & Notes', 'Calendar & tasks', Icons.event_note, Colors.teal, () => context.push('/planner'))),
-                    ],
-                  ),
-                ],
-              ),
-
-                    const SizedBox(height: 24),
-
-                    if (lowStockAlerts.isNotEmpty)
-                      _buildWarningCard('Low Stock Alerts', lowStockAlerts.take(3).join(', ')),
                   ],
                 ),
               ),
-            ),
+
+              const SizedBox(height: 24),
+
+              GridView.count(
+                crossAxisCount: Responsive.getGridCrossAxisCount(context),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: isSmallPhone ? 1.3 : 1.6,
+                children: [
+                  _buildKPICard("Today's Revenue", '$symbol${todayRevenue.toStringAsFixed(0)}', Icons.attach_money, Colors.green),
+                  _buildKPICard("Today's Profit", '$symbol${todayProfit.toStringAsFixed(0)}', Icons.trending_up, Colors.blue),
+                  _buildKPICard('Transactions', '$todayTransactions', Icons.receipt, Colors.orange),
+                  _buildKPICard('Outstanding Debt', '$symbol${totalOutstandingDebt.toStringAsFixed(0)}', Icons.account_balance, Colors.red),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              Text('Quick Actions', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+
+              GridView.count(
+                crossAxisCount: Responsive.getGridCrossAxisCount(context),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: isSmallPhone ? 1.2 : 1.3,
+                children: [
+                  _buildQuickActionCard('New Sale', 'Process transactions', Icons.add_shopping_cart, Colors.red, () => context.push('/new-sale')),
+                  _buildQuickActionCard('Operations', 'Daily tasks & cash drop', Icons.business_center, Colors.brown, () => context.push('/operations')),
+                  _buildQuickActionCard('View Reports', 'Sales analytics', Icons.bar_chart, Colors.green, () => context.go('/reports')),
+                  _buildQuickActionCard('Manage Products', 'Inventory control', Icons.inventory, Colors.orange, () => context.push('/products')),
+                  _buildQuickActionCard('Customers', 'Client management', Icons.people, Colors.purple, () => context.push('/customers')),
+                  _buildQuickActionCard('Planner & Notes', 'Calendar & tasks', Icons.event_note, Colors.teal, () => context.push('/planner')),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              if (lowStockAlerts.isNotEmpty)
+                _buildWarningCard('Low Stock Alerts', lowStockAlerts.take(3).join(', ')),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -317,24 +297,15 @@ class _DashboardPageState extends State<DashboardPage> {
     return Card(
       elevation: Responsive.getCardElevation(context),
       child: Padding(
-        padding: EdgeInsets.all(isSmall ? 8 : 12),
+        padding: EdgeInsets.all(isSmall ? 8 : 14),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: isSmall ? 18 : 22),
-            const SizedBox(height: 4),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(value, style: TextStyle(fontSize: isSmall ? 14 : 17, fontWeight: FontWeight.bold)),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              title, 
-              style: TextStyle(fontSize: isSmall ? 9 : 10, color: Colors.grey[600]), 
-              textAlign: TextAlign.center,
-              maxLines: 1,
-            ),
+            Icon(icon, color: color, size: isSmall ? 18 : 24),
+            SizedBox(height: isSmall ? 4 : 8),
+            FittedBox(fit: BoxFit.scaleDown, child: Text(value, style: TextStyle(fontSize: isSmall ? 14 : 18, fontWeight: FontWeight.bold))),
+            Text(title, style: TextStyle(fontSize: isSmall ? 9 : 11, color: Colors.grey[600])),
           ],
         ),
       ),
@@ -364,10 +335,7 @@ class _DashboardPageState extends State<DashboardPage> {
             children: [
               Icon(icon, color: color, size: isSmall ? 22 : 26),
               const Spacer(),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: isSmall ? 12 : 13)),
-              ),
+              Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: isSmall ? 12 : 13)),
               Text(subtitle, style: TextStyle(fontSize: isSmall ? 10 : 11, color: Colors.grey[600]), maxLines: 1, overflow: TextOverflow.ellipsis),
             ],
           ),
@@ -390,7 +358,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  Text(message, style: const TextStyle(fontSize: 13), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  Text(message, style: const TextStyle(fontSize: 13)),
                 ],
               ),
             ),

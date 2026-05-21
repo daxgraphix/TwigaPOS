@@ -203,40 +203,26 @@ class _OperationsPageState extends State<OperationsPage> {
               const Text('Quick Actions',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
-               GridView.count(
-                 crossAxisCount: Responsive.getGridCrossAxisCount(context),
-                 shrinkWrap: true,
-                 physics: const NeverScrollableScrollPhysics(),
-                 mainAxisSpacing: 12,
-                 crossAxisSpacing: 12,
-                 childAspectRatio: Responsive.isDesktop(context) ? 1.8 : 1.5,
-                children: [
-                  _buildQuickActionCard(
-                    'Cash Drop',
-                    Icons.money,
-                    AppTheme.primaryColor,
-                    () => _showCashDropDialog(context),
-                  ),
-                  _buildQuickActionCard(
-                    'End of Day',
-                    Icons.assessment,
-                    AppTheme.primaryColor,
-                    () => context.push('/shift-report'),
-                  ),
-                  _buildQuickActionCard(
-                    'View Reports',
-                    Icons.bar_chart,
-                    AppTheme.primaryColor,
-                    () => context.go('/reports'),
-                  ),
-                  _buildQuickActionCard(
-                    'Planner',
-                    Icons.event_note,
-                    AppTheme.primaryColor,
-                    () => context.push('/planner'),
-                  ),
-                ],
-              ),
+               // Quick Actions - using simple Column + Row for reliability
+               Column(
+                 children: [
+                   Row(
+                     children: [
+                       Expanded(child: _buildQuickActionCard('Cash Drop', Icons.money, AppTheme.primaryColor, () => _showCashDropDialog(context))),
+                       const SizedBox(width: 12),
+                       Expanded(child: _buildQuickActionCard('End of Day', Icons.assessment, AppTheme.primaryColor, () => context.push('/shift-report'))),
+                     ],
+                   ),
+                   const SizedBox(height: 12),
+                   Row(
+                     children: [
+                       Expanded(child: _buildQuickActionCard('View Reports', Icons.bar_chart, AppTheme.primaryColor, () => context.go('/reports'))),
+                       const SizedBox(width: 12),
+                       Expanded(child: _buildQuickActionCard('Planner', Icons.event_note, AppTheme.primaryColor, () => context.push('/planner'))),
+                     ],
+                   ),
+                 ],
+               ),
               const SizedBox(height: 24),
             ],
           ),

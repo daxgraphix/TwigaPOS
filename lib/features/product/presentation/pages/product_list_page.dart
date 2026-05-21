@@ -239,21 +239,26 @@ class _ProductListPageState extends State<ProductListPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                  Text(
-                                    product.name,
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: Responsive.getFontSize(context, 16)),
-                                  ),
+                                   Text(
+                                     product.name,
+                                     style: TextStyle(
+                                         fontWeight: FontWeight.w600,
+                                         fontSize: Responsive.getFontSize(context, 16)),
+                                     maxLines: 2,
+                                     overflow: TextOverflow.ellipsis,
+                                   ),
                                  const SizedBox(height: 4),
                                  Row(
                                    children: [
-                                     Text(
-                                       '${AppTheme.getCurrencySymbol(Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS'))}${(product.price * AppTheme.getExchangeRate(Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS'))).toStringAsFixed(2)}',
-                                       style: TextStyle(
-                                           fontWeight: FontWeight.w500,
-                                           color: Colors.grey[600]),
-                                     ),
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          '${AppTheme.getCurrencySymbol(Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS'))}${(product.price * AppTheme.getExchangeRate(Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS'))).toStringAsFixed(2)}',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              color: Colors.grey[600]),
+                                        ),
+                                      ),
                                      const SizedBox(width: 12),
                                      Container(
                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

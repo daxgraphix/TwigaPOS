@@ -132,37 +132,53 @@ class _CustomerListPageState extends State<CustomerListPage> {
 
             Padding(
               padding: EdgeInsets.symmetric(horizontal: Responsive.getPadding(context)),
-              child: GridView.count(
-                crossAxisCount: Responsive.getGridCrossAxisCount(context),
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: isDesktop ? 2.5 : 1.4,
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 12,
                 children: [
-                  _buildSummaryCard(
-                    'Total Customers',
-                    _customers.length.toString(),
-                    Icons.people,
-                    Colors.blue,
+                  SizedBox(
+                    width: isDesktop 
+                        ? (MediaQuery.of(context).size.width - Responsive.getPadding(context) * 2 - 36) / 4 
+                        : (MediaQuery.of(context).size.width - Responsive.getPadding(context) * 2 - 24) / 2,
+                    child: _buildSummaryCard(
+                      'Total Customers',
+                      _customers.length.toString(),
+                      Icons.people,
+                      Colors.blue,
+                    ),
                   ),
-                  _buildSummaryCard(
-                    'Active Customers',
-                    _customers.where((c) => c.isActive).length.toString(),
-                    Icons.check_circle,
-                    Colors.green,
+                  SizedBox(
+                    width: isDesktop 
+                        ? (MediaQuery.of(context).size.width - Responsive.getPadding(context) * 2 - 36) / 4 
+                        : (MediaQuery.of(context).size.width - Responsive.getPadding(context) * 2 - 24) / 2,
+                    child: _buildSummaryCard(
+                      'Active Customers',
+                      _customers.where((c) => c.isActive).length.toString(),
+                      Icons.check_circle,
+                      Colors.green,
+                    ),
                   ),
-                  _buildSummaryCard(
-                    'Outstanding Debt',
-                    '${AppTheme.getCurrencySymbol(Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS'))}${_customers.fold(0.0, (sum, c) => sum + c.currentBalance).toStringAsFixed(0)}',
-                    Icons.account_balance,
-                    Colors.orange,
+                  SizedBox(
+                    width: isDesktop 
+                        ? (MediaQuery.of(context).size.width - Responsive.getPadding(context) * 2 - 36) / 4 
+                        : (MediaQuery.of(context).size.width - Responsive.getPadding(context) * 2 - 24) / 2,
+                    child: _buildSummaryCard(
+                      'Outstanding Debt',
+                      '${AppTheme.getCurrencySymbol(Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS'))}${_customers.fold(0.0, (sum, c) => sum + c.currentBalance).toStringAsFixed(0)}',
+                      Icons.account_balance,
+                      Colors.orange,
+                    ),
                   ),
-                  _buildSummaryCard(
-                    'Avg Balance',
-                    _customers.isEmpty ? '0' : '${AppTheme.getCurrencySymbol(Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS'))}${(_customers.fold(0.0, (sum, c) => sum + c.currentBalance) / _customers.length).toStringAsFixed(0)}',
-                    Icons.trending_up,
-                    Colors.purple,
+                  SizedBox(
+                    width: isDesktop 
+                        ? (MediaQuery.of(context).size.width - Responsive.getPadding(context) * 2 - 36) / 4 
+                        : (MediaQuery.of(context).size.width - Responsive.getPadding(context) * 2 - 24) / 2,
+                    child: _buildSummaryCard(
+                      'Avg Balance',
+                      _customers.isEmpty ? '0' : '${AppTheme.getCurrencySymbol(Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS'))}${(_customers.fold(0.0, (sum, c) => sum + c.currentBalance) / _customers.length).toStringAsFixed(0)}',
+                      Icons.trending_up,
+                      Colors.purple,
+                    ),
                   ),
                 ],
               ),
@@ -208,7 +224,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                           padding: EdgeInsets.only(
                             left: Responsive.getPadding(context),
                             right: Responsive.getPadding(context),
-                            bottom: MediaQuery.of(context).padding.bottom + (isDesktop ? 60 : 90),
+                            bottom: MediaQuery.of(context).padding.bottom + (isDesktop ? 70 : 110),
                           ),
                             physics: const BouncingScrollPhysics(),
                             itemCount: filteredCustomers.length,
@@ -255,37 +271,39 @@ class _CustomerListPageState extends State<CustomerListPage> {
       child: Padding(
         padding: EdgeInsets.all(isSmallPhone ? 8 : 12),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
               padding: EdgeInsets.all(isSmallPhone ? 4 : 6),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(6),
               ),
               child: Icon(icon, color: color, size: isSmallPhone ? 16 : 20),
             ),
-            SizedBox(height: isSmallPhone ? 3 : 6),
+            const SizedBox(height: 4),
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
                 value,
                 style: TextStyle(
-                  fontSize: isSmallPhone ? 16 : 20,
+                  fontSize: isSmallPhone ? 15 : 18,
                   fontWeight: FontWeight.bold,
                 ),
                 maxLines: 1,
               ),
             ),
+            const SizedBox(height: 2),
             Text(
               title,
               style: TextStyle(
-                fontSize: isSmallPhone ? 9 : 11,
+                fontSize: isSmallPhone ? 9 : 10,
                 color: Colors.grey[600],
+                height: 1.1,
               ),
               textAlign: TextAlign.center,
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ],

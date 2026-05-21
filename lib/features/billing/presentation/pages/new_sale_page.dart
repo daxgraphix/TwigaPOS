@@ -432,7 +432,7 @@ class _NewSalePageState extends State<NewSalePage> {
                                   child: ElevatedButton.icon(
                                     onPressed: _proceedToCheckout,
                                     icon: const Icon(Icons.payment),
-                                    label: const Text('Checkout'),
+                                     label: const FittedBox(fit: BoxFit.scaleDown, child: Text('Checkout')),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: primary,
                                       padding:
@@ -445,7 +445,7 @@ class _NewSalePageState extends State<NewSalePage> {
                                   child: OutlinedButton.icon(
                                     onPressed: _recordSale,
                                     icon: const Icon(Icons.check_circle),
-                                    label: const Text('Record Sale'),
+                                     label: const FittedBox(fit: BoxFit.scaleDown, child: Text('Record Sale')),
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -461,7 +461,7 @@ class _NewSalePageState extends State<NewSalePage> {
                                       _proceedToCheckout();
                                     },
                                     icon: const Icon(Icons.receipt),
-                                    label: const Text('Invoice'),
+                                     label: const FittedBox(fit: BoxFit.scaleDown, child: Text('Invoice')),
                                   ),
                                 ),
                               ],

@@ -170,13 +170,15 @@ class _BudgetListPageState extends State<BudgetListPage> {
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              Text(
-                                                budget.name,
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
+                                               Text(
+                                                 budget.name,
+                                                 style: const TextStyle(
+                                                   fontSize: 16,
+                                                   fontWeight: FontWeight.bold,
+                                                 ),
+                                                 maxLines: 1,
+                                                 overflow: TextOverflow.ellipsis,
+                                               ),
                                               Text(
                                                 '${_formatPeriod(budget.period)} â€¢ ${category?.name ?? "All Categories"}',
                                                 style: TextStyle(

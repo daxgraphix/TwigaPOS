@@ -26,7 +26,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  bool _isLoading = true;
 
     @override
     void initState() {
@@ -45,13 +44,6 @@ class _HomePageState extends State<HomePage> {
 
       // Generate recurring transactions
       _generateRecurringTransactions();
-
-      // Simulate loading
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (mounted) {
-          setState(() => _isLoading = false);
-        }
-      });
     }
 
   void _generateRecurringTransactions() {
@@ -62,24 +54,51 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
     return Scaffold(
       key: _scaffoldKey,
       drawer: _buildDrawer(context),
-      body: IndexedStack(
-        index: _selectedIndex,
+      body: Column(
         children: [
-          TransactionsTab(),
-          ReportsTab(),
-          AccountsTab(),
-          BudgetsTab(),
-          CategoriesTab(),
-          PlannerTab(),
+          // Quick Access Cards - Planner & Calendar, Notes, Operations, Reports (as requested)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Quick Access', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: _buildQuickCard('Planner & Calendar', Icons.event_note, () => context.push('/planner'))),
+                    const SizedBox(width: 12),
+                    Expanded(child: _buildQuickCard('Notes', Icons.note, () => context.push('/planner'))),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: _buildQuickCard('Operations', Icons.business_center, () => context.push('/operations'))),
+                    const SizedBox(width: 12),
+                    Expanded(child: _buildQuickCard('Reports', Icons.bar_chart, () => context.push('/reports'))),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: IndexedStack(
+              index: _selectedIndex,
+              children: [
+                TransactionsTab(),
+                ReportsTab(),
+                AccountsTab(),
+                BudgetsTab(),
+                CategoriesTab(),
+                PlannerTab(),
+              ],
+            ),
+          ),
         ],
       ),
       bottomNavigationBar: _buildBottomNavBar(),
@@ -125,6 +144,36 @@ class _HomePageState extends State<HomePage> {
           label: 'Planner',
         ),
       ],
+    );
+  }
+
+  Widget _buildQuickCard(String title, IconData icon, VoidCallback onTap) {
+    final isSmall = MediaQuery.of(context).size.width < 380;
+    return Card(
+      elevation: 2,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: EdgeInsets.all(isSmall ? 12 : 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: isSmall ? 26 : 32, color: AppTheme.primaryColor),
+              SizedBox(height: isSmall ? 6 : 8),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  title,
+                  style: TextStyle(fontSize: isSmall ? 11 : 12, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -252,12 +301,63 @@ class TransactionsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<TransactionBloc, TransactionState>(
       builder: (context, state) {
-        if (state.isLoading) {
+        if (state is TransactionInitial || state.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
 
         if (state is TransactionLoaded) {
-          if (state.transactions.isEmpty) {
+          if (state.transactions.isNotEmpty) {
+            return ListView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+              itemCount: state.transactions.length + 1,
+              itemBuilder: (context, index) {
+                if (index == state.transactions.length) {
+                  // Footer — Add Transaction button
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: ElevatedButton.icon(
+                      onPressed: () => context.push('/add-transaction'),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Transaction'),
+                    ),
+                  );
+                }
+                final transaction = state.transactions[index];
+                final currency = Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS');
+                final symbol = AppTheme.getCurrencySymbol(currency);
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: transaction.type == TransactionType.expense
+                          ? Colors.red.withValues(alpha: 0.1)
+                          : Colors.green.withValues(alpha: 0.1),
+                      child: Icon(
+                        transaction.type == TransactionType.expense
+                            ? Icons.arrow_downward
+                            : Icons.arrow_upward,
+                        color: transaction.type == TransactionType.expense
+                            ? Colors.red
+                            : Colors.green,
+                      ),
+                    ),
+                    title: Text(transaction.description,
+                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text('${transaction.date.day}/${transaction.date.month}/${transaction.date.year}'),
+                    trailing: Text(
+                      '$symbol${transaction.amount.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        color: transaction.type == TransactionType.expense
+                            ? Colors.red
+                            : Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          } else {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -280,60 +380,6 @@ class TransactionsTab extends StatelessWidget {
               ),
             );
           }
-
-          return Column(
-            children: [
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: state.transactions.length,
-                  itemBuilder: (context, index) {
-                    final transaction = state.transactions[index];
-                    final currency = Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS');
-                    final symbol = AppTheme.getCurrencySymbol(currency);
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: transaction.type == TransactionType.expense
-                              ? Colors.red.withValues(alpha: 0.1)
-                              : Colors.green.withValues(alpha: 0.1),
-                          child: Icon(
-                            transaction.type == TransactionType.expense
-                                ? Icons.arrow_downward
-                                : Icons.arrow_upward,
-                            color: transaction.type == TransactionType.expense
-                                ? Colors.red
-                                : Colors.green,
-                          ),
-                        ),
-                        title: Text(transaction.description,
-                            style: const TextStyle(fontWeight: FontWeight.w600)),
-                        subtitle: Text('${transaction.date.day}/${transaction.date.month}/${transaction.date.year}'),
-                        trailing: Text(
-                          '$symbol${transaction.amount.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            color: transaction.type == TransactionType.expense
-                                ? Colors.red
-                                : Colors.green,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: ElevatedButton.icon(
-                  onPressed: () => context.push('/add-transaction'),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Transaction'),
-                ),
-              ),
-            ],
-          );
         }
 
         return const Center(child: Text('Error loading transactions'));
@@ -362,78 +408,83 @@ class _ReportsTabState extends State<ReportsTab> {
   Widget build(BuildContext context) {
     return BlocBuilder<ReportCubit, ReportState>(
       builder: (context, state) {
+        // Month picker header — natural height, not in Expanded
+        Widget monthHeader = Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              const Text('Select Month: ', style: TextStyle(fontWeight: FontWeight.bold)),
+              TextButton(
+                 onPressed: () async {
+                   final date = await showDatePicker(
+                    context: context,
+                    initialDate: _selectedMonth,
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime.now(),
+                  );
+                   if (date != null && mounted) {
+                     final selectedMonth = date;
+                     setState(() {
+                       _selectedMonth = selectedMonth;
+                     });
+                      context.read<ReportCubit>().loadMonthlyReport(selectedMonth);
+                   }
+              },
+              child: Text('${_selectedMonth.month}/${_selectedMonth.year}'),
+            ),
+            ],
+          ),
+        );
+
+        Widget reportBody;
+        if (state is ReportInitial || state.isLoading) {
+          reportBody = const Center(child: CircularProgressIndicator());
+        } else if (state is ReportLoaded) {
+          reportBody = SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSummaryCards(state.report),
+                const SizedBox(height: 24),
+                const Text('Expenses by Category', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 200,
+                  child: _buildExpensePieChart(state.report),
+                ),
+                const SizedBox(height: 24),
+                // Export/Share buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _exportReport(state.report),
+                        icon: const Icon(Icons.download),
+                        label: const Text('Export CSV'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _shareReport(state.report),
+                        icon: const Icon(Icons.share),
+                        label: const Text('Share'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        } else {
+          reportBody = const Center(child: Text('Error loading report'));
+        }
+
         return Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  const Text('Select Month: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                  TextButton(
-                     onPressed: () async {
-                       final date = await showDatePicker(
-                        context: context,
-                        initialDate: _selectedMonth,
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime.now(),
-                      );
-                       if (date != null && mounted) {
-                         final selectedMonth = date;
-                         setState(() {
-                           _selectedMonth = selectedMonth;
-                         });
-                          context.read<ReportCubit>().loadMonthlyReport(selectedMonth);
-                       }
-                    },
-                    child: Text('${_selectedMonth.month}/${_selectedMonth.year}'),
-                  ),
-                ],
-              ),
-            ),
-            if (state.isLoading)
-              const Expanded(child: Center(child: CircularProgressIndicator()))
-            else if (state is ReportLoaded)
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildSummaryCards(state.report),
-                      const SizedBox(height: 24),
-                      const Text('Expenses by Category', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        height: 200,
-                        child: _buildExpensePieChart(state.report),
-                      ),
-                      const SizedBox(height: 24),
-                      // Export/Share buttons
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () => _exportReport(state.report),
-                              icon: const Icon(Icons.download),
-                              label: const Text('Export CSV'),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () => _shareReport(state.report),
-                              icon: const Icon(Icons.share),
-                              label: const Text('Share'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            else
-              const Expanded(child: Center(child: Text('Error loading report'))),
+            monthHeader,
+            Expanded(child: reportBody),
           ],
         );
       },
@@ -466,9 +517,15 @@ class _ReportsTabState extends State<ReportsTab> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Text(title, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(title, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+            ),
             const SizedBox(height: 8),
-            Text('$symbol${amount.toStringAsFixed(2)}', style: TextStyle(color: color, fontSize: 16)),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text('$symbol${amount.toStringAsFixed(2)}', style: TextStyle(color: color, fontSize: 16)),
+            ),
           ],
         ),
       ),
@@ -508,6 +565,16 @@ class _ReportsTabState extends State<ReportsTab> {
   }
 
   String _getCategoryName(String categoryId) {
+    try {
+      final financeState = context.read<FinanceBloc>().state;
+      if (financeState is CategoriesLoaded) {
+        final match = financeState.categories.firstWhere(
+          (c) => c.id == categoryId,
+          orElse: () => throw Exception('not found'),
+        );
+        return match.name;
+      }
+    } catch (_) {}
     return categoryId;
   }
 
@@ -567,7 +634,7 @@ class AccountsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AccountCubit, AccountState>(
       builder: (context, state) {
-        if (state.isLoading) {
+        if (state is AccountInitial || state.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -596,47 +663,42 @@ class AccountsTab extends StatelessWidget {
             );
           }
 
-          return Column(
-            children: [
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: state.accounts.length,
-                  itemBuilder: (context, index) {
-                    final account = state.accounts[index];
-                    final currency = Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS');
-                    final symbol = AppTheme.getCurrencySymbol(currency);
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                          child: Icon(
-                            account.type == AccountType.checking
-                                ? Icons.account_balance
-                                : account.type == AccountType.savings
-                                    ? Icons.savings
-                                    : Icons.credit_card,
-                            color: Theme.of(context).primaryColor,
-                          ),
-                        ),
-                        title: Text(account.name,
-                            style: const TextStyle(fontWeight: FontWeight.w600)),
-                        subtitle: Text(account.type.name.toUpperCase()),
-                        trailing: Text(
-                          '$symbol${account.balance.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: state.accounts.length,
+            itemBuilder: (context, index) {
+              final account = state.accounts[index];
+              final currency = Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS');
+              final symbol = AppTheme.getCurrencySymbol(currency);
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                    child: Icon(
+                      account.type == AccountType.checking
+                          ? Icons.account_balance
+                          : account.type == AccountType.savings
+                              ? Icons.savings
+                              : Icons.credit_card,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                  title: Text(account.name,
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: Text(account.type.name.toUpperCase()),
+                  trailing: Text(
+                    '$symbol${account.balance.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              );
+            },
           );
+
         }
 
         return const Center(child: Text('Error loading accounts'));
@@ -652,7 +714,7 @@ class BudgetsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<BudgetCubit, BudgetState>(
       builder: (context, state) {
-        if (state.isLoading) {
+        if (state is BudgetInitial || state.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -681,53 +743,48 @@ class BudgetsTab extends StatelessWidget {
             );
           }
 
-          return Column(
-            children: [
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: state.budgets.length,
-                  itemBuilder: (context, index) {
-                    final budget = state.budgets[index];
-                    final currency = Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS');
-                    final symbol = AppTheme.getCurrencySymbol(currency);
-                    final progress = budget.amount > 0 ? budget.spent / budget.amount : 0.0;
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                          child: Text(
-                            '${((progress) * 100).toInt()}%',
-                            style: TextStyle(
-                                color: Theme.of(context).primaryColor,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        title: Text(budget.name,
-                            style: const TextStyle(fontWeight: FontWeight.w600)),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Spent: $symbol${budget.spent.toStringAsFixed(2)} / $symbol${budget.amount.toStringAsFixed(2)}'),
-                            const SizedBox(height: 4),
-                            LinearProgressIndicator(
-                              value: progress.clamp(0.0, 1.0),
-                              backgroundColor: Colors.grey[300],
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                progress > 1.0 ? Colors.red : Theme.of(context).primaryColor,
-                              ),
-                            ),
-                          ],
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: state.budgets.length,
+            itemBuilder: (context, index) {
+              final budget = state.budgets[index];
+              final currency = Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS');
+              final symbol = AppTheme.getCurrencySymbol(currency);
+              final progress = budget.amount > 0 ? budget.spent / budget.amount : 0.0;
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                    child: Text(
+                      '${((progress) * 100).toInt()}%',
+                      style: TextStyle(
+                          color: Theme.of(context).primaryColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  title: Text(budget.name,
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Spent: $symbol${budget.spent.toStringAsFixed(2)} / $symbol${budget.amount.toStringAsFixed(2)}'),
+                      const SizedBox(height: 4),
+                      LinearProgressIndicator(
+                        value: progress.clamp(0.0, 1.0),
+                        backgroundColor: Colors.grey[300],
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          progress > 1.0 ? Colors.red : Theme.of(context).primaryColor,
                         ),
                       ),
-                    );
-                  },
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              );
+            },
           );
+
         }
 
         return const Center(child: Text('Error loading budgets'));
@@ -743,7 +800,7 @@ class CategoriesTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<FinanceBloc, FinanceState>(
       builder: (context, state) {
-        if (state is FinanceLoading) {
+        if (state is FinanceInitial || state is FinanceLoading) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -779,33 +836,28 @@ class CategoriesTab extends StatelessWidget {
             );
           }
 
-          return Column(
-            children: [
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: state.categories.length,
-                  itemBuilder: (context, index) {
-                    final category = state.categories[index];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: category.color,
-                          child: Icon(
-                            category.icon,
-                            color: Colors.white,
-                          ),
-                        ),
-                        title: Text(category.name,
-                            style: const TextStyle(fontWeight: FontWeight.w600)),
-                      ),
-                    );
-                  },
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: state.categories.length,
+            itemBuilder: (context, index) {
+              final category = state.categories[index];
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: category.color,
+                    child: Icon(
+                      category.icon,
+                      color: Colors.white,
+                    ),
+                  ),
+                  title: Text(category.name,
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
                 ),
-              ),
-            ],
+              );
+            },
           );
+
         }
 
         return const Center(child: Text('Error loading categories'));
@@ -835,12 +887,17 @@ class _PlannerTabState extends State<PlannerTab> {
     _loadData();
   }
 
-  void _loadData() {
+    void _loadData() {
     final eventsBox = Hive.box('planner_events');
     final notesBox = Hive.box('planner_notes');
 
     if (eventsBox.isNotEmpty) {
-      _events = eventsBox.values.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      _events = eventsBox.values.map((raw) {
+        if (raw is Map) return Map<String, dynamic>.from(raw);
+        if (raw is Map<String, dynamic>) return raw;
+        // HiveBox rehydration can return Map<dynamic, dynamic> — coerce
+        return Map<String, dynamic>.from(Map<dynamic, dynamic>.from(raw as Map));
+      }).toList();
     }
     if (notesBox.isNotEmpty) {
       _notes = notesBox.values.cast<String>().toList();
@@ -970,7 +1027,9 @@ class _PlannerTabState extends State<PlannerTab> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  TableCalendar(
+                  SizedBox(
+                    height: 320,
+                    child: TableCalendar(
                     firstDay: DateTime.utc(2020, 1, 1),
                     lastDay: DateTime.utc(2030, 12, 31),
                     focusedDay: _focusedDay,
@@ -987,14 +1046,15 @@ class _PlannerTabState extends State<PlannerTab> {
                         _calendarFormat = format;
                       });
                     },
-                    onPageChanged: (focusedDay) {
-                      _focusedDay = focusedDay;
-                    },
+                     onPageChanged: (focusedDay) {
+                       _focusedDay = focusedDay;
+                     },
+                   ),
                   ),
-                ],
-              ),
-            ),
-          ),
+                 ],
+               ),
+             ),
+           ),
           const SizedBox(height: 16),
 
           // Events Section

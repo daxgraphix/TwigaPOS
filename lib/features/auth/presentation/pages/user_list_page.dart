@@ -184,13 +184,15 @@ class _UserListPageState extends State<UserListPage> {
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              Text(
-                                                user.name,
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
+                                               Text(
+                                                 user.name,
+                                                 style: const TextStyle(
+                                                   fontSize: 16,
+                                                   fontWeight: FontWeight.bold,
+                                                 ),
+                                                 maxLines: 1,
+                                                 overflow: TextOverflow.ellipsis,
+                                               ),
                                               const SizedBox(height: 4),
                                               Text(
                                                 user.email,

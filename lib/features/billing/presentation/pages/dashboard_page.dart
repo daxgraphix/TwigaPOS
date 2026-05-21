@@ -50,8 +50,10 @@ class _DashboardPageState extends State<DashboardPage> {
 
   String _getUserDisplayName() {
     final settingsBox = Hive.box('settings');
-    final userName = (settingsBox.get('userName', defaultValue: '') as String).trim();
-    final userEmail = (settingsBox.get('userEmail', defaultValue: '') as String).trim();
+    final userName =
+        (settingsBox.get('userName', defaultValue: '') as String).trim();
+    final userEmail =
+        (settingsBox.get('userEmail', defaultValue: '') as String).trim();
     if (userName.isNotEmpty) {
       return userName.split(' ').first;
     } else if (userEmail.isNotEmpty) {
@@ -113,16 +115,20 @@ class _DashboardPageState extends State<DashboardPage> {
         customerRepo.getDebtAgingSummary(),
       ]);
 
-      final todaySalesResult = results[0] as Either<Failure, List<SalesTransaction>>;
+      final todaySalesResult =
+          results[0] as Either<Failure, List<SalesTransaction>>;
       final lowStockResult = results[1] as Either<Failure, List<String>>;
-      final debtAgingResult = results[2] as Either<Failure, Map<String, double>>;
+      final debtAgingResult =
+          results[2] as Either<Failure, Map<String, double>>;
 
       final todaySales = todaySalesResult.getOrElse((_) => []);
       final lowStockAlerts = lowStockResult.getOrElse((_) => []);
       final debtAging = debtAgingResult.getOrElse((_) => {});
 
-      double todayRevenue = todaySales.fold<double>(0.0, (double sum, SalesTransaction sale) => sum + sale.totalRevenue);
-      double todayProfit = todaySales.fold<double>(0.0, (double sum, SalesTransaction sale) => sum + sale.totalProfit);
+      double todayRevenue = todaySales.fold<double>(
+          0.0, (double sum, SalesTransaction sale) => sum + sale.totalRevenue);
+      double todayProfit = todaySales.fold<double>(
+          0.0, (double sum, SalesTransaction sale) => sum + sale.totalProfit);
       int todayTransactions = todaySales.length;
 
       if (!mounted) return;
@@ -135,8 +141,8 @@ class _DashboardPageState extends State<DashboardPage> {
           'lowStockAlerts': lowStockAlerts,
           'totalOutstandingDebt': debtAging['total'] ?? 0.0,
           'overdueDebt': (debtAging['thirtyDays'] ?? 0.0) +
-                      (debtAging['sixtyDays'] ?? 0.0) +
-                      (debtAging['ninetyDaysPlus'] ?? 0.0),
+              (debtAging['sixtyDays'] ?? 0.0) +
+              (debtAging['ninetyDaysPlus'] ?? 0.0),
         };
         _isLoading = false;
         _lastLoadTime = DateTime.now();
@@ -152,7 +158,8 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    final currency = Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS');
+    final currency =
+        Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS');
     final symbol = AppTheme.getCurrencySymbol(currency);
     final isSmallPhone = MediaQuery.of(context).size.width < 380;
 
@@ -186,16 +193,21 @@ class _DashboardPageState extends State<DashboardPage> {
     final todayRevenue = (data['todayRevenue'] ?? 0.0) as double;
     final todayProfit = (data['todayProfit'] ?? 0.0) as double;
     final todayTransactions = (data['todayTransactions'] ?? 0) as int;
-    final lowStockAlerts = (data['lowStockAlerts'] ?? <String>[]) as List<String>;
-    final totalOutstandingDebt = (data['totalOutstandingDebt'] ?? 0.0) as double;
+    final lowStockAlerts =
+        (data['lowStockAlerts'] ?? <String>[]) as List<String>;
+    final totalOutstandingDebt =
+        (data['totalOutstandingDebt'] ?? 0.0) as double;
 
     return Scaffold(
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(_shopName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            const Text('Dashboard', style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal)),
+            Text(_shopName,
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            const Text('Dashboard',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal)),
           ],
         ),
         backgroundColor: AppTheme.primaryColor,
@@ -215,7 +227,12 @@ class _DashboardPageState extends State<DashboardPage> {
       body: RefreshIndicator(
         onRefresh: () => _loadDashboardData(forceRefresh: true),
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(Responsive.getPadding(context)),
+          padding: EdgeInsets.fromLTRB(
+            Responsive.getPadding(context),
+            Responsive.getPadding(context),
+            Responsive.getPadding(context),
+            Responsive.getPadding(context) + 16, // extra for shell bottom nav
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -227,64 +244,110 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.waving_hand, color: Colors.white, size: 28),
+                    const Icon(Icons.waving_hand,
+                        color: Colors.white, size: 28),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Welcome back,', style: TextStyle(color: Colors.white70, fontSize: 14)),
-                          Text(_getUserDisplayName(), style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                          const Text('Welcome back,',
+                              style: TextStyle(
+                                  color: Colors.white70, fontSize: 14)),
+                          Text(_getUserDisplayName(),
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
                   ],
                 ),
               ),
-
               const SizedBox(height: 24),
-
               GridView.count(
                 crossAxisCount: Responsive.getGridCrossAxisCount(context),
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
-                childAspectRatio: isSmallPhone ? 1.3 : 1.6,
+                childAspectRatio: isSmallPhone ? 1.2 : 1.4,
                 children: [
-                  _buildKPICard("Today's Revenue", '$symbol${todayRevenue.toStringAsFixed(0)}', Icons.attach_money, Colors.green),
-                  _buildKPICard("Today's Profit", '$symbol${todayProfit.toStringAsFixed(0)}', Icons.trending_up, Colors.blue),
-                  _buildKPICard('Transactions', '$todayTransactions', Icons.receipt, Colors.orange),
-                  _buildKPICard('Outstanding Debt', '$symbol${totalOutstandingDebt.toStringAsFixed(0)}', Icons.account_balance, Colors.red),
+                  _buildKPICard(
+                      "Today's Revenue",
+                      '$symbol${todayRevenue.toStringAsFixed(0)}',
+                      Icons.attach_money,
+                      Colors.green),
+                  _buildKPICard(
+                      "Today's Profit",
+                      '$symbol${todayProfit.toStringAsFixed(0)}',
+                      Icons.trending_up,
+                      Colors.blue),
+                  _buildKPICard('Transactions', '$todayTransactions',
+                      Icons.receipt, Colors.orange),
+                  _buildKPICard(
+                      'Outstanding Debt',
+                      '$symbol${totalOutstandingDebt.toStringAsFixed(0)}',
+                      Icons.account_balance,
+                      Colors.red),
                 ],
               ),
-
               const SizedBox(height: 24),
-
-              Text('Quick Actions', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text('Quick Actions',
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
-
               GridView.count(
                 crossAxisCount: Responsive.getGridCrossAxisCount(context),
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
-                childAspectRatio: isSmallPhone ? 1.2 : 1.3,
+                childAspectRatio: isSmallPhone ? 1.1 : 1.2,
                 children: [
-                  _buildQuickActionCard('New Sale', 'Process transactions', Icons.add_shopping_cart, Colors.red, () => context.push('/new-sale')),
-                  _buildQuickActionCard('Operations', 'Daily tasks & cash drop', Icons.business_center, Colors.brown, () => context.push('/operations')),
-                  _buildQuickActionCard('View Reports', 'Sales analytics', Icons.bar_chart, Colors.green, () => context.go('/reports')),
-                  _buildQuickActionCard('Manage Products', 'Inventory control', Icons.inventory, Colors.orange, () => context.push('/products')),
-                  _buildQuickActionCard('Customers', 'Client management', Icons.people, Colors.purple, () => context.push('/customers')),
-                  _buildQuickActionCard('Planner & Notes', 'Calendar & tasks', Icons.event_note, Colors.teal, () => context.push('/planner')),
+                  _buildQuickActionCard(
+                      'New Sale',
+                      'Process transactions',
+                      Icons.add_shopping_cart,
+                      Colors.red,
+                      () => context.push('/new-sale')),
+                  _buildQuickActionCard(
+                      'Operations',
+                      'Daily tasks & cash drop',
+                      Icons.business_center,
+                      Colors.brown,
+                      () => context.push('/operations')),
+                  _buildQuickActionCard(
+                      'View Reports',
+                      'Sales analytics',
+                      Icons.bar_chart,
+                      Colors.green,
+                      () => context.go('/reports')),
+                  _buildQuickActionCard(
+                      'Manage Products',
+                      'Inventory control',
+                      Icons.inventory,
+                      Colors.orange,
+                      () => context.push('/products')),
+                  _buildQuickActionCard(
+                      'Customers',
+                      'Client management',
+                      Icons.people,
+                      Colors.purple,
+                      () => context.push('/customers')),
+                  _buildQuickActionCard(
+                      'Planner & Notes',
+                      'Calendar & tasks',
+                      Icons.event_note,
+                      Colors.teal,
+                      () => context.push('/planner')),
                 ],
               ),
-
               const SizedBox(height: 24),
-
               if (lowStockAlerts.isNotEmpty)
-                _buildWarningCard('Low Stock Alerts', lowStockAlerts.take(3).join(', ')),
+                _buildWarningCard(
+                    'Low Stock Alerts', lowStockAlerts.take(3).join(', ')),
             ],
           ),
         ),
@@ -297,22 +360,33 @@ class _DashboardPageState extends State<DashboardPage> {
     return Card(
       elevation: Responsive.getCardElevation(context),
       child: Padding(
-        padding: EdgeInsets.all(isSmall ? 8 : 14),
+        padding: EdgeInsets.all(isSmall ? 6 : 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, color: color, size: isSmall ? 18 : 24),
-            SizedBox(height: isSmall ? 4 : 8),
-            FittedBox(fit: BoxFit.scaleDown, child: Text(value, style: TextStyle(fontSize: isSmall ? 14 : 18, fontWeight: FontWeight.bold))),
-            Text(title, style: TextStyle(fontSize: isSmall ? 9 : 11, color: Colors.grey[600])),
+            SizedBox(height: isSmall ? 4 : 6),
+            FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(value,
+                    style: TextStyle(
+                        fontSize: isSmall ? 14 : 18,
+                        fontWeight: FontWeight.bold))),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(title,
+                  style: TextStyle(
+                      fontSize: isSmall ? 9 : 11, color: Colors.grey[600])),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildQuickActionCard(String title, String subtitle, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildQuickActionCard(String title, String subtitle, IconData icon,
+      Color color, VoidCallback onTap) {
     final isSmall = MediaQuery.of(context).size.width < 380;
     return InkWell(
       onTap: onTap,
@@ -325,7 +399,10 @@ class _DashboardPageState extends State<DashboardPage> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             gradient: LinearGradient(
-              colors: [color.withValues(alpha: 0.1), color.withValues(alpha: 0.03)],
+              colors: [
+                color.withValues(alpha: 0.1),
+                color.withValues(alpha: 0.03)
+              ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -335,8 +412,18 @@ class _DashboardPageState extends State<DashboardPage> {
             children: [
               Icon(icon, color: color, size: isSmall ? 22 : 26),
               const Spacer(),
-              Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: isSmall ? 12 : 13)),
-              Text(subtitle, style: TextStyle(fontSize: isSmall ? 10 : 11, color: Colors.grey[600]), maxLines: 1, overflow: TextOverflow.ellipsis),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(title,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: isSmall ? 12 : 13)),
+              ),
+              Text(subtitle,
+                  style: TextStyle(
+                      fontSize: isSmall ? 10 : 11, color: Colors.grey[600]),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
             ],
           ),
         ),
@@ -357,7 +444,8 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(title,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                   Text(message, style: const TextStyle(fontSize: 13)),
                 ],
               ),

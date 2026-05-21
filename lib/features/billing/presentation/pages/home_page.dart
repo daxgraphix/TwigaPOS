@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
@@ -16,7 +16,8 @@ import '../../../finance/domain/entities/transaction.dart';
 import '../../../finance/domain/entities/category.dart';
 import '../../../finance/domain/usecases/monthly_report_usecase.dart';
 
-Widget _quickAccessCard(BuildContext context, String title, IconData icon, VoidCallback onTap) {
+Widget _quickAccessCard(
+    BuildContext context, String title, IconData icon, VoidCallback onTap) {
   final isSmall = MediaQuery.of(context).size.width < 380;
   return Card(
     elevation: 3,
@@ -25,24 +26,26 @@ Widget _quickAccessCard(BuildContext context, String title, IconData icon, VoidC
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Padding(
-        padding: EdgeInsets.all(isSmall ? 14 : 18),
+        padding: EdgeInsets.all(isSmall ? 10 : 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: EdgeInsets.all(isSmall ? 10 : 12),
+              padding: EdgeInsets.all(isSmall ? 6 : 10),
               decoration: BoxDecoration(
                 color: AppTheme.primaryColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, size: isSmall ? 24 : 28, color: AppTheme.primaryColor),
+              child: Icon(icon,
+                  size: isSmall ? 22 : 26, color: AppTheme.primaryColor),
             ),
-            SizedBox(height: isSmall ? 8 : 10),
+            SizedBox(height: isSmall ? 4 : 8),
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
                 title,
-                style: TextStyle(fontSize: isSmall ? 11 : 12, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                    fontSize: isSmall ? 10 : 11, fontWeight: FontWeight.w600),
                 textAlign: TextAlign.center,
                 maxLines: 2,
               ),
@@ -99,15 +102,21 @@ class _HomePageState extends State<HomePage> {
           BlocBuilder<AccountCubit, AccountState>(
             builder: (context, state) {
               if (state is AccountLoaded && state.accounts.isNotEmpty) {
-                final totalBalance = state.accounts.fold<double>(0.0, (sum, acc) => sum + acc.balance);
-                final currency = Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS');
+                final totalBalance = state.accounts
+                    .fold<double>(0.0, (sum, acc) => sum + acc.balance);
+                final currency = Hive.box('settings')
+                    .get('selectedCurrency', defaultValue: 'TZS');
                 final symbol = AppTheme.getCurrencySymbol(currency);
                 return Container(
                   margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [AppTheme.primaryColor, AppTheme.primaryColor.withValues(alpha: 0.85)],
+                      colors: [
+                        AppTheme.primaryColor,
+                        AppTheme.primaryColor.withValues(alpha: 0.85)
+                      ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -126,11 +135,16 @@ class _HomePageState extends State<HomePage> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Total Balance', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                          const Text('Total Balance',
+                              style: TextStyle(
+                                  color: Colors.white70, fontSize: 13)),
                           const SizedBox(height: 2),
                           Text(
                             '$symbol${totalBalance.toStringAsFixed(0)}',
-                            style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
@@ -140,7 +154,8 @@ class _HomePageState extends State<HomePage> {
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.account_balance_wallet, color: Colors.white, size: 28),
+                        child: const Icon(Icons.account_balance_wallet,
+                            color: Colors.white, size: 28),
                       ),
                     ],
                   ),
@@ -185,11 +200,15 @@ class _HomePageState extends State<HomePage> {
       currentIndex: _selectedIndex,
       onTap: (index) => setState(() => _selectedIndex = index),
       items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.swap_horiz), label: 'Transactions'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.swap_horiz), label: 'Transactions'),
         BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Reports'),
-        BottomNavigationBarItem(icon: Icon(Icons.account_balance), label: 'Accounts'),
-        BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet), label: 'Budgets'),
-        BottomNavigationBarItem(icon: Icon(Icons.category), label: 'Categories'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.account_balance), label: 'Accounts'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.account_balance_wallet), label: 'Budgets'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.category), label: 'Categories'),
       ],
     );
   }
@@ -205,14 +224,20 @@ class _HomePageState extends State<HomePage> {
                 shopName = state.shop.name;
               }
               return DrawerHeader(
-                decoration: BoxDecoration(color: Theme.of(context).primaryColor),
+                decoration:
+                    BoxDecoration(color: Theme.of(context).primaryColor),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(shopName, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                    Text(shopName,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
-                    const Text('Personal Finance Tracker', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                    const Text('Personal Finance Tracker',
+                        style: TextStyle(color: Colors.white70, fontSize: 12)),
                   ],
                 ),
               );
@@ -226,7 +251,10 @@ class _HomePageState extends State<HomePage> {
                   leading: const Icon(Icons.swap_horiz, color: Colors.green),
                   title: const Text('Transactions'),
                   onTap: () {
-                    if (context.canPop()) context.pop(); else context.go('/');
+                    if (context.canPop())
+                      context.pop();
+                    else
+                      context.go('/');
                     setState(() => _selectedIndex = 0);
                   },
                 ),
@@ -234,23 +262,34 @@ class _HomePageState extends State<HomePage> {
                   leading: const Icon(Icons.bar_chart, color: Colors.orange),
                   title: const Text('Reports'),
                   onTap: () {
-                    if (context.canPop()) context.pop(); else context.go('/');
+                    if (context.canPop())
+                      context.pop();
+                    else
+                      context.go('/');
                     setState(() => _selectedIndex = 1);
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.account_balance, color: Colors.purple),
+                  leading:
+                      const Icon(Icons.account_balance, color: Colors.purple),
                   title: const Text('Accounts'),
                   onTap: () {
-                    if (context.canPop()) context.pop(); else context.go('/');
+                    if (context.canPop())
+                      context.pop();
+                    else
+                      context.go('/');
                     setState(() => _selectedIndex = 2);
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.account_balance_wallet, color: Colors.teal),
+                  leading: const Icon(Icons.account_balance_wallet,
+                      color: Colors.teal),
                   title: const Text('Budgets'),
                   onTap: () {
-                    if (context.canPop()) context.pop(); else context.go('/');
+                    if (context.canPop())
+                      context.pop();
+                    else
+                      context.go('/');
                     setState(() => _selectedIndex = 3);
                   },
                 ),
@@ -258,7 +297,10 @@ class _HomePageState extends State<HomePage> {
                   leading: const Icon(Icons.category, color: Colors.indigo),
                   title: const Text('Categories'),
                   onTap: () {
-                    if (context.canPop()) context.pop(); else context.go('/');
+                    if (context.canPop())
+                      context.pop();
+                    else
+                      context.go('/');
                     setState(() => _selectedIndex = 4);
                   },
                 ),
@@ -267,7 +309,10 @@ class _HomePageState extends State<HomePage> {
                   leading: const Icon(Icons.store, color: Colors.indigo),
                   title: const Text('Shop Details'),
                   onTap: () {
-                    if (context.canPop()) context.pop(); else context.go('/');
+                    if (context.canPop())
+                      context.pop();
+                    else
+                      context.go('/');
                     context.push('/shop');
                   },
                 ),
@@ -275,7 +320,10 @@ class _HomePageState extends State<HomePage> {
                   leading: const Icon(Icons.settings, color: Colors.grey),
                   title: const Text('Settings'),
                   onTap: () {
-                    if (context.canPop()) context.pop(); else context.go('/');
+                    if (context.canPop())
+                      context.pop();
+                    else
+                      context.go('/');
                     context.push('/settings');
                   },
                 ),
@@ -285,7 +333,8 @@ class _HomePageState extends State<HomePage> {
           const Divider(height: 1),
           const Padding(
             padding: EdgeInsets.all(16.0),
-            child: Text('FinanceTracker v1.0.0', style: TextStyle(color: Colors.grey, fontSize: 10)),
+            child: Text('FinanceTracker v1.0.0',
+                style: TextStyle(color: Colors.grey, fontSize: 10)),
           ),
         ],
       ),
@@ -313,9 +362,12 @@ class TransactionsTab extends StatelessWidget {
                 children: [
                   const Icon(Icons.swap_horiz, size: 80, color: Colors.grey),
                   const SizedBox(height: 16),
-                  const Text('No transactions yet', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('No transactions yet',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  const Text('Add your first expense or income', style: TextStyle(color: Colors.grey)),
+                  const Text('Add your first expense or income',
+                      style: TextStyle(color: Colors.grey)),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
                     onPressed: () => context.push('/add-transaction'),
@@ -331,38 +383,58 @@ class TransactionsTab extends StatelessWidget {
           return Column(
             children: [
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Quick Access', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 12),
+                    const Text('Quick Access',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 6),
                     Row(
                       children: [
-                        Expanded(child: _quickAccessCard(context, 'Planner & Calendar', Icons.event_note, () => context.push('/planner'))),
-                        const SizedBox(width: 12),
-                        Expanded(child: _quickAccessCard(context, 'Notes', Icons.note, () => context.push('/planner'))),
+                        Expanded(
+                            child: _quickAccessCard(
+                                context,
+                                'Planner & Calendar',
+                                Icons.event_note,
+                                () => context.push('/planner'))),
+                        const SizedBox(width: 8),
+                        Expanded(
+                            child: _quickAccessCard(context, 'Notes',
+                                Icons.note, () => context.push('/planner'))),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 6),
                     Row(
                       children: [
-                        Expanded(child: _quickAccessCard(context, 'Operations', Icons.business_center, () => context.push('/operations'))),
-                        const SizedBox(width: 12),
-                        Expanded(child: _quickAccessCard(context, 'Reports', Icons.bar_chart, () => context.push('/reports'))),
+                        Expanded(
+                            child: _quickAccessCard(
+                                context,
+                                'Operations',
+                                Icons.business_center,
+                                () => context.push('/operations'))),
+                        const SizedBox(width: 8),
+                        Expanded(
+                            child: _quickAccessCard(
+                                context,
+                                'Reports',
+                                Icons.bar_chart,
+                                () => context.push('/reports'))),
                       ],
                     ),
                   ],
                 ),
               ),
-
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: state.transactions.length,
                   itemBuilder: (context, index) {
                     final t = state.transactions[index];
-                    final symbol = AppTheme.getCurrencySymbol(Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS'));
+                    final symbol = AppTheme.getCurrencySymbol(
+                        Hive.box('settings')
+                            .get('selectedCurrency', defaultValue: 'TZS'));
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
                       child: ListTile(
@@ -371,22 +443,33 @@ class TransactionsTab extends StatelessWidget {
                               ? Colors.red.withValues(alpha: 0.1)
                               : Colors.green.withValues(alpha: 0.1),
                           child: Icon(
-                            t.type == TransactionType.expense ? Icons.arrow_downward : Icons.arrow_upward,
-                            color: t.type == TransactionType.expense ? Colors.red : Colors.green,
+                            t.type == TransactionType.expense
+                                ? Icons.arrow_downward
+                                : Icons.arrow_upward,
+                            color: t.type == TransactionType.expense
+                                ? Colors.red
+                                : Colors.green,
                           ),
                         ),
-                        title: Text(t.description, style: const TextStyle(fontWeight: FontWeight.w600)),
-                        subtitle: Text('${t.date.day}/${t.date.month}/${t.date.year}'),
+                        title: Text(t.description,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w600)),
+                        subtitle: Text(
+                            '${t.date.day}/${t.date.month}/${t.date.year}'),
                         trailing: Text('$symbol${t.amount.toStringAsFixed(2)}',
-                            style: TextStyle(color: t.type == TransactionType.expense ? Colors.red : Colors.green, fontWeight: FontWeight.bold)),
+                            style: TextStyle(
+                                color: t.type == TransactionType.expense
+                                    ? Colors.red
+                                    : Colors.green,
+                                fontWeight: FontWeight.bold)),
                       ),
                     );
                   },
                 ),
               ),
-
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: ElevatedButton.icon(
                   onPressed: () => context.push('/add-transaction'),
                   icon: const Icon(Icons.add),
@@ -428,7 +511,8 @@ class _ReportsTabState extends State<ReportsTab> {
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
-                  const Text('Select Month: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('Select Month: ',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                   TextButton(
                     onPressed: () async {
                       final date = await showDatePicker(
@@ -442,7 +526,8 @@ class _ReportsTabState extends State<ReportsTab> {
                         context.read<ReportCubit>().loadMonthlyReport(date);
                       }
                     },
-                    child: Text('${_selectedMonth.month}/${_selectedMonth.year}'),
+                    child:
+                        Text('${_selectedMonth.month}/${_selectedMonth.year}'),
                   ),
                 ],
               ),
@@ -458,15 +543,27 @@ class _ReportsTabState extends State<ReportsTab> {
                     children: [
                       _buildSummaryCards(state.report),
                       const SizedBox(height: 24),
-                      const Text('Expenses by Category', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      const Text('Expenses by Category',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 16),
-                      SizedBox(height: 200, child: _buildExpensePieChart(state.report)),
+                      SizedBox(
+                          height: 200,
+                          child: _buildExpensePieChart(state.report)),
                       const SizedBox(height: 24),
                       Row(
                         children: [
-                          Expanded(child: ElevatedButton.icon(onPressed: () => _exportReport(state.report), icon: const Icon(Icons.download), label: const Text('Export CSV'))),
+                          Expanded(
+                              child: ElevatedButton.icon(
+                                  onPressed: () => _exportReport(state.report),
+                                  icon: const Icon(Icons.download),
+                                  label: const Text('Export CSV'))),
                           const SizedBox(width: 12),
-                          Expanded(child: ElevatedButton.icon(onPressed: () => _shareReport(state.report), icon: const Icon(Icons.share), label: const Text('Share'))),
+                          Expanded(
+                              child: ElevatedButton.icon(
+                                  onPressed: () => _shareReport(state.report),
+                                  icon: const Icon(Icons.share),
+                                  label: const Text('Share'))),
                         ],
                       ),
                     ],
@@ -474,7 +571,8 @@ class _ReportsTabState extends State<ReportsTab> {
                 ),
               )
             else
-              const Expanded(child: Center(child: Text('Error loading report'))),
+              const Expanded(
+                  child: Center(child: Text('Error loading report'))),
           ],
         );
       },
@@ -485,17 +583,24 @@ class _ReportsTabState extends State<ReportsTab> {
     final isSmall = MediaQuery.of(context).size.width < 380;
     return Row(
       children: [
-        Expanded(child: _buildCard('Income', report.totalIncome, Colors.green, isSmall)),
+        Expanded(
+            child: _buildCard(
+                'Income', report.totalIncome, Colors.green, isSmall)),
         SizedBox(width: isSmall ? 8 : 16),
-        Expanded(child: _buildCard('Expenses', report.totalExpenses, Colors.red, isSmall)),
+        Expanded(
+            child: _buildCard(
+                'Expenses', report.totalExpenses, Colors.red, isSmall)),
         SizedBox(width: isSmall ? 8 : 16),
-        Expanded(child: _buildCard('Net', report.netIncome, report.netIncome >= 0 ? Colors.green : Colors.red, isSmall)),
+        Expanded(
+            child: _buildCard('Net', report.netIncome,
+                report.netIncome >= 0 ? Colors.green : Colors.red, isSmall)),
       ],
     );
   }
 
   Widget _buildCard(String title, double amount, Color color, bool isSmall) {
-    final symbol = AppTheme.getCurrencySymbol(Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS'));
+    final symbol = AppTheme.getCurrencySymbol(
+        Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS'));
 
     IconData cardIcon = title == 'Income'
         ? Icons.trending_up
@@ -551,12 +656,16 @@ class _ReportsTabState extends State<ReportsTab> {
   }
 
   Widget _buildExpensePieChart(MonthlyReport report) {
-    final expenseTransactions = report.transactions.where((t) => t.type == TransactionType.expense).toList();
+    final expenseTransactions = report.transactions
+        .where((t) => t.type == TransactionType.expense)
+        .toList();
     final categoryTotals = <String, double>{};
     for (final t in expenseTransactions) {
-      categoryTotals[t.categoryId] = (categoryTotals[t.categoryId] ?? 0) + t.amount;
+      categoryTotals[t.categoryId] =
+          (categoryTotals[t.categoryId] ?? 0) + t.amount;
     }
-    if (categoryTotals.isEmpty) return const Center(child: Text('No expenses this month'));
+    if (categoryTotals.isEmpty)
+      return const Center(child: Text('No expenses this month'));
 
     final sections = categoryTotals.entries.map((e) {
       final name = _getCategoryName(e.key);
@@ -565,18 +674,22 @@ class _ReportsTabState extends State<ReportsTab> {
         value: e.value,
         title: '$name\n${e.value.toStringAsFixed(0)}',
         radius: 60,
-        titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+        titleStyle: const TextStyle(
+            fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
       );
     }).toList();
 
-    return PieChart(PieChartData(sections: sections, sectionsSpace: 2, centerSpaceRadius: 40));
+    return PieChart(PieChartData(
+        sections: sections, sectionsSpace: 2, centerSpaceRadius: 40));
   }
 
   String _getCategoryName(String categoryId) {
     try {
       final financeState = context.read<FinanceBloc>().state;
       if (financeState is CategoriesLoaded) {
-        final match = financeState.categories.firstWhere((c) => c.id == categoryId, orElse: () => throw Exception());
+        final match = financeState.categories.firstWhere(
+            (c) => c.id == categoryId,
+            orElse: () => throw Exception());
         return match.name;
       }
     } catch (_) {}
@@ -584,7 +697,14 @@ class _ReportsTabState extends State<ReportsTab> {
   }
 
   Color _getCategoryColor(String categoryId) {
-    final colors = [Colors.red, Colors.blue, Colors.green, Colors.yellow, Colors.purple, Colors.orange];
+    final colors = [
+      Colors.red,
+      Colors.blue,
+      Colors.green,
+      Colors.yellow,
+      Colors.purple,
+      Colors.orange
+    ];
     return colors[categoryId.hashCode % colors.length];
   }
 
@@ -593,16 +713,20 @@ class _ReportsTabState extends State<ReportsTab> {
       final csv = StringBuffer();
       csv.writeln('Description,Category,Type,Amount,Date');
       for (final t in report.transactions) {
-        csv.writeln('"${t.description}","${t.categoryId}",${t.type},${t.amount},${t.date.toIso8601String()}');
+        csv.writeln(
+            '"${t.description}","${t.categoryId}",${t.type},${t.amount},${t.date.toIso8601String()}');
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Report exported: ${report.transactions.length} transactions'),
-          action: SnackBarAction(label: 'Share', onPressed: () => _shareReport(report)),
+          content: Text(
+              'Report exported: ${report.transactions.length} transactions'),
+          action: SnackBarAction(
+              label: 'Share', onPressed: () => _shareReport(report)),
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Export failed: $e'), backgroundColor: Colors.red));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Export failed: $e'), backgroundColor: Colors.red));
     }
   }
 
@@ -616,7 +740,8 @@ Net Income: ${report.netIncome}
 
 Transactions: ${report.transactions.length}
 ''';
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Report ready to share:\n$summary')));
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Report ready to share:\n$summary')));
   }
 }
 
@@ -639,13 +764,20 @@ class AccountsTab extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.account_balance, size: 80, color: Colors.grey),
+                  const Icon(Icons.account_balance,
+                      size: 80, color: Colors.grey),
                   const SizedBox(height: 16),
-                  const Text('No accounts yet', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('No accounts yet',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  const Text('Add your first account', style: TextStyle(color: Colors.grey)),
+                  const Text('Add your first account',
+                      style: TextStyle(color: Colors.grey)),
                   const SizedBox(height: 24),
-                  ElevatedButton.icon(onPressed: () => context.push('/finance'), icon: const Icon(Icons.add), label: const Text('Manage Accounts')),
+                  ElevatedButton.icon(
+                      onPressed: () => context.push('/finance'),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Manage Accounts')),
                 ],
               ),
             );
@@ -655,17 +787,23 @@ class AccountsTab extends StatelessWidget {
             itemCount: state.accounts.length,
             itemBuilder: (context, index) {
               final a = state.accounts[index];
-              final symbol = AppTheme.getCurrencySymbol(Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS'));
+              final symbol = AppTheme.getCurrencySymbol(Hive.box('settings')
+                  .get('selectedCurrency', defaultValue: 'TZS'));
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                    child: Icon(Icons.account_balance, color: Theme.of(context).primaryColor),
+                    backgroundColor:
+                        Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                    child: Icon(Icons.account_balance,
+                        color: Theme.of(context).primaryColor),
                   ),
-                  title: Text(a.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  title: Text(a.name,
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
                   subtitle: Text(a.type.name.toUpperCase()),
-                  trailing: Text('$symbol${a.balance.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  trailing: Text('$symbol${a.balance.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16)),
                 ),
               );
             },
@@ -698,13 +836,20 @@ class BudgetsTab extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.account_balance_wallet, size: 80, color: Colors.grey),
+                  const Icon(Icons.account_balance_wallet,
+                      size: 80, color: Colors.grey),
                   const SizedBox(height: 16),
-                  const Text('No budgets yet', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('No budgets yet',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  const Text('Create your first budget', style: TextStyle(color: Colors.grey)),
+                  const Text('Create your first budget',
+                      style: TextStyle(color: Colors.grey)),
                   const SizedBox(height: 24),
-                  ElevatedButton.icon(onPressed: () => context.push('/budgets/add'), icon: const Icon(Icons.add), label: const Text('Create Budget')),
+                  ElevatedButton.icon(
+                      onPressed: () => context.push('/budgets/add'),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Create Budget')),
                 ],
               ),
             );
@@ -714,22 +859,30 @@ class BudgetsTab extends StatelessWidget {
             itemCount: state.budgets.length,
             itemBuilder: (context, index) {
               final b = state.budgets[index];
-              final symbol = AppTheme.getCurrencySymbol(Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS'));
-              final progress = b.amount > 0 ? (b.spent / b.amount).clamp(0.0, 1.0) : 0.0;
+              final symbol = AppTheme.getCurrencySymbol(Hive.box('settings')
+                  .get('selectedCurrency', defaultValue: 'TZS'));
+              final progress =
+                  b.amount > 0 ? (b.spent / b.amount).clamp(0.0, 1.0) : 0.0;
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                    child: Text('${(progress * 100).toInt()}%', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    backgroundColor:
+                        Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                    child: Text('${(progress * 100).toInt()}%',
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.bold)),
                   ),
-                  title: Text(b.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  title: Text(b.name,
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Spent: $symbol${b.spent.toStringAsFixed(2)} / $symbol${b.amount.toStringAsFixed(2)}'),
+                      Text(
+                          'Spent: $symbol${b.spent.toStringAsFixed(2)} / $symbol${b.amount.toStringAsFixed(2)}'),
                       const SizedBox(height: 4),
-                      LinearProgressIndicator(value: progress, backgroundColor: Colors.grey[300]),
+                      LinearProgressIndicator(
+                          value: progress, backgroundColor: Colors.grey[300]),
                     ],
                   ),
                 ),
@@ -764,7 +917,13 @@ class CategoriesTab extends StatelessWidget {
     };
 
     final colorOptions = [
-      Colors.blue, Colors.green, Colors.red, Colors.orange, Colors.purple, Colors.teal, Colors.brown
+      Colors.blue,
+      Colors.green,
+      Colors.red,
+      Colors.orange,
+      Colors.purple,
+      Colors.teal,
+      Colors.brown
     ];
 
     showDialog(
@@ -780,10 +939,12 @@ class CategoriesTab extends StatelessWidget {
                   children: [
                     TextField(
                       controller: nameController,
-                      decoration: const InputDecoration(labelText: 'Category Name'),
+                      decoration:
+                          const InputDecoration(labelText: 'Category Name'),
                     ),
                     const SizedBox(height: 16),
-                    const Text('Icon', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Text('Icon',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
@@ -791,18 +952,21 @@ class CategoriesTab extends StatelessWidget {
                         return ChoiceChip(
                           label: Icon(entry.value, size: 20),
                           selected: selectedIcon == entry.key,
-                          onSelected: (_) => setState(() => selectedIcon = entry.key),
+                          onSelected: (_) =>
+                              setState(() => selectedIcon = entry.key),
                         );
                       }).toList(),
                     ),
                     const SizedBox(height: 16),
-                    const Text('Color', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Text('Color',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
                       children: colorOptions.map((color) {
                         return GestureDetector(
-                          onTap: () => setState(() => selectedColor = color.toARGB32()),
+                          onTap: () =>
+                              setState(() => selectedColor = color.toARGB32()),
                           child: Container(
                             width: 32,
                             height: 32,
@@ -821,22 +985,29 @@ class CategoriesTab extends StatelessWidget {
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+                TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: const Text('Cancel')),
                 ElevatedButton(
                   onPressed: () {
                     if (nameController.text.trim().isEmpty) return;
 
                     final category = Category(
-                      id: existing?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+                      id: existing?.id ??
+                          DateTime.now().millisecondsSinceEpoch.toString(),
                       name: nameController.text.trim(),
                       colorValue: selectedColor,
                       iconName: selectedIcon,
                     );
 
                     if (existing == null) {
-                      context.read<FinanceBloc>().add(AddCategoryEvent(category));
+                      context
+                          .read<FinanceBloc>()
+                          .add(AddCategoryEvent(category));
                     } else {
-                      context.read<FinanceBloc>().add(UpdateCategoryEvent(category));
+                      context
+                          .read<FinanceBloc>()
+                          .add(UpdateCategoryEvent(category));
                     }
                     Navigator.pop(dialogContext);
                   },
@@ -865,9 +1036,12 @@ class CategoriesTab extends StatelessWidget {
                 children: [
                   const Icon(Icons.category, size: 80, color: Colors.grey),
                   const SizedBox(height: 16),
-                  const Text('No categories yet', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('No categories yet',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  const Text('Add your first category', style: TextStyle(color: Colors.grey)),
+                  const Text('Add your first category',
+                      style: TextStyle(color: Colors.grey)),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
                     onPressed: () => CategoriesTab._showCategoryDialog(context),
@@ -886,8 +1060,11 @@ class CategoriesTab extends StatelessWidget {
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
-                  leading: CircleAvatar(backgroundColor: c.color, child: Icon(c.icon, color: Colors.white)),
-                  title: Text(c.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  leading: CircleAvatar(
+                      backgroundColor: c.color,
+                      child: Icon(c.icon, color: Colors.white)),
+                  title: Text(c.name,
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -896,9 +1073,12 @@ class CategoriesTab extends StatelessWidget {
                         onPressed: () => _showCategoryDialog(context, c),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+                        icon: const Icon(Icons.delete,
+                            size: 20, color: Colors.red),
                         onPressed: () {
-                          context.read<FinanceBloc>().add(DeleteCategoryEvent(c.id));
+                          context
+                              .read<FinanceBloc>()
+                              .add(DeleteCategoryEvent(c.id));
                         },
                       ),
                     ],
@@ -974,14 +1154,21 @@ class _PlannerTabState extends State<PlannerTab> {
         final TextEditingController titleController = TextEditingController();
         return AlertDialog(
           title: const Text('Add Event'),
-          content: TextField(controller: titleController, decoration: const InputDecoration(hintText: 'Event title')),
+          content: TextField(
+              controller: titleController,
+              decoration: const InputDecoration(hintText: 'Event title')),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel')),
             ElevatedButton(
               onPressed: () {
                 if (titleController.text.isNotEmpty) {
                   setState(() {
-                    _events.add({'date': _selectedDay?.toIso8601String(), 'title': titleController.text});
+                    _events.add({
+                      'date': _selectedDay?.toIso8601String(),
+                      'title': titleController.text
+                    });
                   });
                   _saveEvents();
                   Navigator.pop(context);
@@ -1002,9 +1189,15 @@ class _PlannerTabState extends State<PlannerTab> {
         final TextEditingController noteController = TextEditingController();
         return AlertDialog(
           title: const Text('Add Note'),
-          content: TextField(controller: noteController, maxLines: 3, decoration: const InputDecoration(hintText: 'Write your note...')),
+          content: TextField(
+              controller: noteController,
+              maxLines: 3,
+              decoration:
+                  const InputDecoration(hintText: 'Write your note...')),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel')),
             ElevatedButton(
               onPressed: () {
                 if (noteController.text.isNotEmpty) {
@@ -1026,7 +1219,10 @@ class _PlannerTabState extends State<PlannerTab> {
   @override
   Widget build(BuildContext context) {
     final dayEvents = _events
-        .where((e) => e['date'] != null && isSameDay(DateTime.parse(e['date'] as String), _selectedDay ?? _focusedDay))
+        .where((e) =>
+            e['date'] != null &&
+            isSameDay(DateTime.parse(e['date'] as String),
+                _selectedDay ?? _focusedDay))
         .toList();
 
     return SingleChildScrollView(
@@ -1036,7 +1232,8 @@ class _PlannerTabState extends State<PlannerTab> {
         children: [
           Card(
             elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -1045,8 +1242,13 @@ class _PlannerTabState extends State<PlannerTab> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Calendar', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      IconButton(icon: const Icon(Icons.add), onPressed: _addEvent, tooltip: 'Add Event'),
+                      const Text('Calendar',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
+                      IconButton(
+                          icon: const Icon(Icons.add),
+                          onPressed: _addEvent,
+                          tooltip: 'Add Event'),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -1057,14 +1259,16 @@ class _PlannerTabState extends State<PlannerTab> {
                       lastDay: DateTime.utc(2030, 12, 31),
                       focusedDay: _focusedDay,
                       calendarFormat: _calendarFormat,
-                      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                      selectedDayPredicate: (day) =>
+                          isSameDay(_selectedDay, day),
                       onDaySelected: (selectedDay, focusedDay) {
                         setState(() {
                           _selectedDay = selectedDay;
                           _focusedDay = focusedDay;
                         });
                       },
-                      onFormatChanged: (format) => setState(() => _calendarFormat = format),
+                      onFormatChanged: (format) =>
+                          setState(() => _calendarFormat = format),
                       onPageChanged: (focusedDay) => _focusedDay = focusedDay,
                     ),
                   ),
@@ -1077,7 +1281,8 @@ class _PlannerTabState extends State<PlannerTab> {
           // Events Section
           Card(
             elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -1086,18 +1291,28 @@ class _PlannerTabState extends State<PlannerTab> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text("Today's Events", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      TextButton.icon(onPressed: _addEvent, icon: const Icon(Icons.add, size: 18), label: const Text('Add')),
+                      const Text("Today's Events",
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                      TextButton.icon(
+                          onPressed: _addEvent,
+                          icon: const Icon(Icons.add, size: 18),
+                          label: const Text('Add')),
                     ],
                   ),
                   const SizedBox(height: 8),
                   if (dayEvents.isEmpty)
-                    const Padding(padding: EdgeInsets.all(16), child: Center(child: Text('No events for this day', style: TextStyle(color: Colors.grey))))
+                    const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Center(
+                            child: Text('No events for this day',
+                                style: TextStyle(color: Colors.grey))))
                   else
                     ...dayEvents.map((event) => ListTile(
                           leading: const Icon(Icons.event, color: Colors.blue),
                           title: Text(event['title'] ?? ''),
-                          subtitle: Text(event['date']?.toString().split('T').first ?? ''),
+                          subtitle: Text(
+                              event['date']?.toString().split('T').first ?? ''),
                           trailing: IconButton(
                             icon: const Icon(Icons.delete, color: Colors.red),
                             onPressed: () {
@@ -1115,7 +1330,8 @@ class _PlannerTabState extends State<PlannerTab> {
           // Notes Section
           Card(
             elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -1124,13 +1340,22 @@ class _PlannerTabState extends State<PlannerTab> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Quick Notes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      TextButton.icon(onPressed: _addNote, icon: const Icon(Icons.note_add, size: 18), label: const Text('Add Note')),
+                      const Text('Quick Notes',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                      TextButton.icon(
+                          onPressed: _addNote,
+                          icon: const Icon(Icons.note_add, size: 18),
+                          label: const Text('Add Note')),
                     ],
                   ),
                   const SizedBox(height: 8),
                   if (_notes.isEmpty)
-                    const Padding(padding: EdgeInsets.all(16), child: Center(child: Text('No notes yet', style: TextStyle(color: Colors.grey))))
+                    const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Center(
+                            child: Text('No notes yet',
+                                style: TextStyle(color: Colors.grey))))
                   else
                     ..._notes.asMap().entries.map((entry) {
                       final index = entry.key;

@@ -13,7 +13,46 @@ import '../../../finance/presentation/bloc/budget_cubit.dart';
 import '../../../finance/presentation/bloc/account_cubit.dart';
 import '../../../finance/presentation/bloc/report_cubit.dart';
 import '../../../finance/domain/entities/transaction.dart';
+import '../../../finance/domain/entities/category.dart';
 import '../../../finance/domain/usecases/monthly_report_usecase.dart';
+
+Widget _quickAccessCard(BuildContext context, String title, IconData icon, VoidCallback onTap) {
+  final isSmall = MediaQuery.of(context).size.width < 380;
+  return Card(
+    elevation: 3,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: EdgeInsets.all(isSmall ? 14 : 18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: EdgeInsets.all(isSmall ? 10 : 12),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, size: isSmall ? 24 : 28, color: AppTheme.primaryColor),
+            ),
+            SizedBox(height: isSmall ? 8 : 10),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                title,
+                style: TextStyle(fontSize: isSmall ? 11 : 12, fontWeight: FontWeight.w600),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -56,82 +95,86 @@ class _HomePageState extends State<HomePage> {
       drawer: _buildDrawer(context),
       body: Column(
         children: [
-          // Quick Access Cards
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Quick Access', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(child: _buildQuickCard('Planner & Calendar', Icons.event_note, () => context.push('/planner'))),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildQuickCard('Notes', Icons.note, () => context.push('/planner'))),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(child: _buildQuickCard('Operations', Icons.business_center, () => context.push('/operations'))),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildQuickCard('Reports', Icons.bar_chart, () => context.push('/reports'))),
-                  ],
-                ),
-              ],
-            ),
+          // Net Worth / Total Balance Header - key finance UX improvement
+          BlocBuilder<AccountCubit, AccountState>(
+            builder: (context, state) {
+              if (state is AccountLoaded && state.accounts.isNotEmpty) {
+                final totalBalance = state.accounts.fold<double>(0.0, (sum, acc) => sum + acc.balance);
+                final currency = Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS');
+                final symbol = AppTheme.getCurrencySymbol(currency);
+                return Container(
+                  margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [AppTheme.primaryColor, AppTheme.primaryColor.withValues(alpha: 0.85)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Total Balance', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                          const SizedBox(height: 2),
+                          Text(
+                            '$symbol${totalBalance.toStringAsFixed(0)}',
+                            style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.account_balance_wallet, color: Colors.white, size: 28),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
           ),
+
           Expanded(
             flex: 1,
-            child: IndexedStack(
-              index: _selectedIndex,
-              children: const [
-                TransactionsTab(),
-                ReportsTab(),
-                AccountsTab(),
-                BudgetsTab(),
-                CategoriesTab(),
-                PlannerTab(),
-              ],
+            child: SafeArea(
+              top: false,
+              bottom: false,
+              child: IndexedStack(
+                index: _selectedIndex,
+                children: const [
+                  TransactionsTab(),
+                  ReportsTab(),
+                  AccountsTab(),
+                  BudgetsTab(),
+                  CategoriesTab(),
+                ],
+              ),
             ),
           ),
+
+          // Internal finance nav placed inside body (fixes 12px bottom overflow from nested Scaffold + bottom bar)
+          _buildBottomNavBar(),
         ],
       ),
-      bottomNavigationBar: _buildBottomNavBar(),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _scaffoldKey.currentState?.openDrawer(),
         child: const Icon(Icons.menu),
-      ),
-    );
-  }
-
-  Widget _buildQuickCard(String title, IconData icon, VoidCallback onTap) {
-    final isSmall = MediaQuery.of(context).size.width < 380;
-    return Card(
-      elevation: 2,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: EdgeInsets.all(isSmall ? 12 : 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: isSmall ? 26 : 32, color: AppTheme.primaryColor),
-              SizedBox(height: isSmall ? 6 : 8),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  title,
-                  style: TextStyle(fontSize: isSmall ? 11 : 12, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -147,7 +190,6 @@ class _HomePageState extends State<HomePage> {
         BottomNavigationBarItem(icon: Icon(Icons.account_balance), label: 'Accounts'),
         BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet), label: 'Budgets'),
         BottomNavigationBarItem(icon: Icon(Icons.category), label: 'Categories'),
-        BottomNavigationBarItem(icon: Icon(Icons.event_note), label: 'Planner'),
       ],
     );
   }
@@ -284,11 +326,39 @@ class TransactionsTab extends StatelessWidget {
               ),
             );
           }
+
+          // Quick Access ONLY in Transactions tab (as requested)
           return Column(
             children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Quick Access', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(child: _quickAccessCard(context, 'Planner & Calendar', Icons.event_note, () => context.push('/planner'))),
+                        const SizedBox(width: 12),
+                        Expanded(child: _quickAccessCard(context, 'Notes', Icons.note, () => context.push('/planner'))),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(child: _quickAccessCard(context, 'Operations', Icons.business_center, () => context.push('/operations'))),
+                        const SizedBox(width: 12),
+                        Expanded(child: _quickAccessCard(context, 'Reports', Icons.bar_chart, () => context.push('/reports'))),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
               Expanded(
                 child: ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: state.transactions.length,
                   itemBuilder: (context, index) {
                     final t = state.transactions[index];
@@ -314,6 +384,7 @@ class TransactionsTab extends StatelessWidget {
                   },
                 ),
               ),
+
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: ElevatedButton.icon(
@@ -411,27 +482,68 @@ class _ReportsTabState extends State<ReportsTab> {
   }
 
   Widget _buildSummaryCards(MonthlyReport report) {
+    final isSmall = MediaQuery.of(context).size.width < 380;
     return Row(
       children: [
-        Expanded(child: _buildCard('Income', report.totalIncome, Colors.green)),
-        const SizedBox(width: 16),
-        Expanded(child: _buildCard('Expenses', report.totalExpenses, Colors.red)),
-        const SizedBox(width: 16),
-        Expanded(child: _buildCard('Net', report.netIncome, report.netIncome >= 0 ? Colors.green : Colors.red)),
+        Expanded(child: _buildCard('Income', report.totalIncome, Colors.green, isSmall)),
+        SizedBox(width: isSmall ? 8 : 16),
+        Expanded(child: _buildCard('Expenses', report.totalExpenses, Colors.red, isSmall)),
+        SizedBox(width: isSmall ? 8 : 16),
+        Expanded(child: _buildCard('Net', report.netIncome, report.netIncome >= 0 ? Colors.green : Colors.red, isSmall)),
       ],
     );
   }
 
-  Widget _buildCard(String title, double amount, Color color) {
+  Widget _buildCard(String title, double amount, Color color, bool isSmall) {
     final symbol = AppTheme.getCurrencySymbol(Hive.box('settings').get('selectedCurrency', defaultValue: 'TZS'));
+
+    IconData cardIcon = title == 'Income'
+        ? Icons.trending_up
+        : title == 'Expenses'
+            ? Icons.trending_down
+            : Icons.swap_horiz;
+
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        padding: EdgeInsets.all(isSmall ? 12 : 16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border(left: BorderSide(color: color, width: 5)),
+        ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            FittedBox(child: Text(title, style: TextStyle(color: color, fontWeight: FontWeight.bold))),
-            const SizedBox(height: 8),
-            FittedBox(child: Text('$symbol${amount.toStringAsFixed(2)}', style: TextStyle(color: color, fontSize: 16))),
+            Row(
+              children: [
+                Icon(cardIcon, color: color, size: isSmall ? 18 : 22),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      color: Colors.grey[700],
+                      fontSize: isSmall ? 11 : 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                '$symbol${amount.toStringAsFixed(0)}',
+                style: TextStyle(
+                  color: color,
+                  fontSize: isSmall ? 18 : 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -634,6 +746,110 @@ class BudgetsTab extends StatelessWidget {
 class CategoriesTab extends StatelessWidget {
   const CategoriesTab({super.key});
 
+  static void _showCategoryDialog(BuildContext context, [Category? existing]) {
+    final nameController = TextEditingController(text: existing?.name ?? '');
+    String selectedIcon = existing?.iconName ?? 'other';
+    int selectedColor = existing?.colorValue ?? Colors.blue.toARGB32();
+
+    final iconOptions = {
+      'food': Icons.restaurant,
+      'bills': Icons.receipt,
+      'health': Icons.local_hospital,
+      'education': Icons.school,
+      'shopping': Icons.shopping_bag,
+      'transport': Icons.directions_car,
+      'entertainment': Icons.movie,
+      'salary': Icons.work,
+      'other': Icons.category,
+    };
+
+    final colorOptions = [
+      Colors.blue, Colors.green, Colors.red, Colors.orange, Colors.purple, Colors.teal, Colors.brown
+    ];
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(existing == null ? 'Add Category' : 'Edit Category'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(labelText: 'Category Name'),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Icon', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: iconOptions.entries.map((entry) {
+                        return ChoiceChip(
+                          label: Icon(entry.value, size: 20),
+                          selected: selectedIcon == entry.key,
+                          onSelected: (_) => setState(() => selectedIcon = entry.key),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Color', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: colorOptions.map((color) {
+                        return GestureDetector(
+                          onTap: () => setState(() => selectedColor = color.toARGB32()),
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                              border: selectedColor == color.toARGB32()
+                                  ? Border.all(color: Colors.black, width: 3)
+                                  : null,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+                ElevatedButton(
+                  onPressed: () {
+                    if (nameController.text.trim().isEmpty) return;
+
+                    final category = Category(
+                      id: existing?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+                      name: nameController.text.trim(),
+                      colorValue: selectedColor,
+                      iconName: selectedIcon,
+                    );
+
+                    if (existing == null) {
+                      context.read<FinanceBloc>().add(AddCategoryEvent(category));
+                    } else {
+                      context.read<FinanceBloc>().add(UpdateCategoryEvent(category));
+                    }
+                    Navigator.pop(dialogContext);
+                  },
+                  child: Text(existing == null ? 'Add' : 'Update'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<FinanceBloc, FinanceState>(
@@ -654,10 +870,7 @@ class CategoriesTab extends StatelessWidget {
                   const Text('Add your first category', style: TextStyle(color: Colors.grey)),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
-                    onPressed: () {
-                      context.read<FinanceBloc>().add(LoadCategoriesEvent());
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Categories will be available')));
-                    },
+                    onPressed: () => CategoriesTab._showCategoryDialog(context),
                     icon: const Icon(Icons.add),
                     label: const Text('Add Category'),
                   ),
@@ -675,6 +888,21 @@ class CategoriesTab extends StatelessWidget {
                 child: ListTile(
                   leading: CircleAvatar(backgroundColor: c.color, child: Icon(c.icon, color: Colors.white)),
                   title: Text(c.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit, size: 20),
+                        onPressed: () => _showCategoryDialog(context, c),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+                        onPressed: () {
+                          context.read<FinanceBloc>().add(DeleteCategoryEvent(c.id));
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
